@@ -32,16 +32,16 @@ Server:
 
 
 ## Getting started
-To run this app, run the following:
+To run this app locally, run the following:
 ```bash
-docker build -t containername .
+docker-compose up 
 ```
-This will build an image that is based on Python 3.6 with flask.
+This will build up all the services that are listed in docker-compose.yml file.
 
 
-To run the previously built container, type this:
+To delete the previously built containers and networks, type this:
 ```bash
-docker run -p 5000:5000 containername
+docker-compose down
 ```
 This runs the container which listens on host's port 5000.
 If we want to test this:

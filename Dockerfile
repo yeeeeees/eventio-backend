@@ -17,6 +17,9 @@ WORKDIR /app
 COPY requirements.txt /app
 RUN pip install -r requirements.txt
 
+# Run the database initialization and table creation script
+# RUN python create_db.py
+
 # Run app.py when the container launches
 COPY . /app/
-CMD python run.py
+CMD gunicorn run:app -b 0.0.0.0:5000

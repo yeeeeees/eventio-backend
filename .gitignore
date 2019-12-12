@@ -110,4 +110,7 @@ dmypy.json
 # Virtual env
 venv/
 
+# Vscode config
+/.vscode/
+
 # End of https://www.gitignore.io/api/python

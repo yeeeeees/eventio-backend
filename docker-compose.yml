@@ -1,4 +1,23 @@
 version: '3'
 services: 
-    backend:
-        
+    graphql:
+        container_name: graphql
+        build: .
+        ports:
+            - "5000:5000"
+        volumes: 
+            - "./:/app"
+        links: 
+            - postgres
+        depends_on: 
+            - postgres
+        restart: always
+    
+    postgres:
+        container_name: postgres
+        image: postgres
+        environment: 
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: eventio
+            POSTGRES_DATABASE: eventio
+        restart: always
