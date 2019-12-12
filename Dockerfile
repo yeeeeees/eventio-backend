@@ -14,9 +14,9 @@ WORKDIR /app
 # Update pip and the rest of the dependencies
 
 # Install any needed packages specified in requirements.txt
-COPY backend/requirements.txt /app
+COPY requirements.txt /app
 RUN pip install -r requirements.txt
 
 # Run app.py when the container launches
-COPY backend/ /app/
+COPY . /app/
 CMD python run.py
