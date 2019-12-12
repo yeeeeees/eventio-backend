@@ -1,12 +1,12 @@
 # eventio 
 Calendar on steroids.
-**This repository is only for storing backend side of the application. To see mobile application go [here]().**
+**This repository is only for storing backend side of the application. To see mobile application go [here](https://github.com/yeeeeees/eventio-frontend/).**
 
 
 ## Prerequisites
 The only thing to run and develop this app is [Docker](https://docker.com) and docker-compose.
 This is the version of docker which this app was build with.
-```bash
+```
 $ docker version
 
 Client:
