@@ -38,8 +38,15 @@ docker-compose up
 ```
 This will build up all the services that are listed in docker-compose.yml file.
 
+If you are running this project for the first time, tables in the database are not defined. To fix this, open new terminal and type the following:
 
-To delete the previously built containers and networks, type this:
+```bash
+docker exec -it eventio_graphql python create_db.py
+```
+This will define all the tables and relationships. 
+Also use this command if you make changes to database schema or if you just want to wipe all data out of database.
+
+To shut down previously built containers and networks, type this:
 ```bash
 docker-compose down
 ```
@@ -57,6 +64,12 @@ Server: Werkzeug/0.16.0 Python/3.6.9
 {
     "home": "page"
 }
-
-
 ```
+
+
+## Made with
+- [Docker](https://docker.com/) - containerzation
+- [Flask](https://www.palletsprojects.com/p/flask/) - micro web framework 
+- [pytest](https://docs.pytest.org/en/latest/) - python library made for testing and mocking
+- [Postgres](https://postgres.com/) - open source relational database 
+- [GraphQL](https://graphql.org/) - query language  
