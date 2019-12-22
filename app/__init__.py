@@ -9,7 +9,7 @@ app.config.from_object(DevelopmentConfig)
 
 db = SQLAlchemy(app)
 
-from app.some_blueprint.routes import api
+from app.graphql.routes import api
 from app.errors.handlers import errors
 
 app.register_blueprint(api)
@@ -24,7 +24,7 @@ def create_app():
 
     db.init_app(app)
 
-    from app.some_blueprint.routes import api
+    from app.graphql.routes import api
     from app.errors.handlers import errors
 
     app.register_blueprint(api)

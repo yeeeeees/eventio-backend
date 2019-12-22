@@ -22,4 +22,5 @@ RUN pip install -r requirements.txt
 
 # Run app.py when the container launches
 COPY . /app/
-CMD gunicorn run:app -b 0.0.0.0:5000
+CMD python run.py
+#CMD gunicorn run:app -b 0.0.0.0:5000

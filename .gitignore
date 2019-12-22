@@ -113,6 +113,5 @@ venv/
 # Vscode config
 .vscode/
 
-docker/postgres/*
-
+docker/postgres/
 # End of https://www.gitignore.io/api/python
