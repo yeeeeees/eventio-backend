@@ -1,6 +1,7 @@
 import requests 
 from bs4 import BeautifulSoup as bs4    
 from selenium import webdriver
+import os
 
 name = []
 loc = []
@@ -8,7 +9,7 @@ time = []
 events = []
 image = []
 
-URL = "https://www.eventim.hr/hr/venues/split/city.html"
+URL = "https://adriaticket.com/"
 
 driver = webdriver.Chrome('C:/Users/PC/Downloads/chromedriver_win32/chromedriver.exe')
 driver.get(URL)
@@ -18,11 +19,12 @@ r = driver.execute_script("return document.documentElement.outerHTML")
 driver.quit()
 
 soup = bs4(r, 'html.parser')
-events_holder = soup.find_all('a',{'class':'m-eventListItem'})
+events_holder = soup.find_all('div',{'class':'col-md-6 col-sm-6 col-xs-12 one-event ng-scope'})
+
 
 for event in events_holder:
-    events.append('https://www.eventim.hr' + event.get('href'))
 
+    events.append('https://adriaticket.com' + event.a.get('href'))
 
 for event in events:
 
@@ -33,8 +35,9 @@ for event in events:
     driver.quit()
 
     soup = bs4(r, 'html.parser')
-
-    image_holder = soup.find('img', class_='pageheader-bgimage') 
-    image.append(image_holder.get('src'))
-
-print(image)
+    try:
+        image_holder = soup.find('div', class_='col-md-8') 
+        image.append(image_holder.div.p.text)
+    except:
+        image.append(None)
+    print(image)

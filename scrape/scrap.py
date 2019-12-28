@@ -1,7 +1,7 @@
 import requests
 from selenium import webdriver 
 from bs4 import BeautifulSoup as bs4
-
+import os
 pages = {
     
     'eventim':{
@@ -9,7 +9,8 @@ pages = {
         'holder':('a', 'm-eventListItem'),
         'name': ('h3', 'm-eventListItem__title'),
         'loc': ('span', 'm-eventListItem__venue'),
-        'time': ('span', 'm-eventListItem__dateItem')
+        'time': ('span', 'm-eventListItem__dateItem'),
+        'img': ('https://www.eventim.hr', 'img', 'pageheader-bgimage')
     },
 
     'adriaticket':{
@@ -17,32 +18,29 @@ pages = {
         'holder':('div', 'col-md-6 col-sm-6 col-xs-12 one-event ng-scope'),
         'name': ('h4', 'ng-binding'),
         'loc': ('div', 'mjesto'),
-        'time': ('div', 'vrijeme')
+        'time': ('div', 'vrijeme'),
+        'img': ('https://adriaticket.com', 'div', 'col-md-12 event-image ')
     }
 }
 
 
 class Event():
-    def __init__(self, URL, HOLDER, NAME, LOC, TIME):
+    def __init__(self, URL, HOLDER, NAME, LOC, TIME, IMG):
         
         self.URL = URL
         self.HOLDER = HOLDER
         self.NAME = NAME
         self.LOC = LOC
         self.TIME = TIME
+        self.IMG = IMG
         self.name = []
         self.time = []
         self.loc = []
 
-        driver = webdriver.Chrome('C:/Users/PC/Downloads/chromedriver_win32/chromedriver.exe')
-        driver.get(self.URL)
-
-        # r = requests.get(URL) 
-        r = driver.execute_script("return document.documentElement.outerHTML")
-        driver.quit()
+        self.r = open_page(URL)
         
-        soup = bs4(r, 'html.parser')     
-        events_holder = soup.find_all(HOLDER[0],{'class':HOLDER[1]})
+        soup = bs4(self.r, 'html.parser')     
+        events_holder = soup.find_all(HOLDER[0], class_=HOLDER[1])
 
         for event in events_holder:
 
@@ -56,7 +54,50 @@ class Event():
             self.time.append(time_holder)
 
     def get_img(self):
-        pass
+
+        events = []
+        image = []
+
+        soup = bs4(self.r, 'html.parser')
+        events_holder = soup.find_all(self.HOLDER[0], class_=self.HOLDER[1])
+      
+        for event in events_holder:
+            
+            if event.get('href') == None:
+                events.append(self.IMG[0] + event.a.get('href'))
+            else:
+                events.append(self.IMG[0] + event.get('href'))
+            
+      
+        for event in events:
+
+            r = open_page(event)
+
+            soup = bs4(r, 'html.parser')
+
+            image_holder = soup.find(self.IMG[1], class_=self.IMG[2])
+            
+            if image_holder.get('src') == None:
+                image.append(image_holder.img.get('src'))
+            else:
+                image.append(image_holder.get('src'))
+           
+        return image
+
+
+def open_page(URL):
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+
+    location = os.environ.get("WEBDRIVER_LOCATION")
+    driver = webdriver.Chrome(location, chrome_options=options)
+    driver.get(URL)
+    
+    r = driver.execute_script("return document.documentElement.outerHTML")
+    driver.quit()
+    
+    return r
 
 def main():
 
@@ -65,9 +106,10 @@ def main():
                     pages[page]['holder'], 
                     pages[page]['name'], 
                     pages[page]['loc'], 
-                    pages[page]['time'])
+                    pages[page]['time'],
+                    pages[page]['img'])
     
-        print(eventim.time)
+        print(eventim.get_img())
 
 if __name__ == "__main__":
     main()    
