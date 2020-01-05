@@ -14,7 +14,7 @@ class User(db.Model):
     events = db.relationship("Event", backref="organizer", lazy=True)
 
     def __repr__(self):
-        print(f"User({self.id}, {self.name}, {self.surname}, {self.email}")
+        return f"User({self.uuid}, {self.fname}, {self.surname}, {self.email})"
 
 
 class Event(db.Model):
@@ -23,3 +23,6 @@ class Event(db.Model):
     date_posted = db.Column(db.String(50), nullable=False, default=datetime.now().isoformat())
     description = db.Column(db.Text)
     user_uuid = db.Column(db.Integer, db.ForeignKey("user.uuid"), nullable=False)
+
+    def __repr__(self):
+        return f"Event({self.uuid}, {self.title}, {self.description}, oranizer id={self.user_uuid})"

@@ -112,6 +112,10 @@ class DeleteUser(graphene.Mutation):
     def mutate(self, info, uuid):
         user = UserModel.query.filter_by(uuid=uuid).first()
 
+        if len(user.events) > 0:
+            for event in user.events:
+                db.session.delete(event)
+
         if not user:
             return DeleteUser(message="No user found with that uuid. Please try again.")
 
@@ -131,10 +135,10 @@ class CreateEvent(graphene.Mutation):
     message = graphene.String()
 
     def mutate(self, info, title, description, organizer_uuid):
-        organizer = UserModel.query.filter_by(uuid=organizer_uuid).first()
         event = EventModel(title=title, description=description)
+        organizer = UserModel.query.filter_by(uuid=organizer_uuid).first()
 
-        if not organizer:
+        if organizer:
             event.organizer = organizer
 
         else:
@@ -187,7 +191,7 @@ class DeleteEvent(graphene.Mutation):
         event = EventModel.query.filter_by(uuid=uuid).first()
 
         if not event:
-            return DeleteEvent(message="No event foud with that uuid. Please try again.")
+            return DeleteEvent(message="No event found with that uuid. Please try again.")
 
         db.session.delete(event)
         db.session.commit()
@@ -211,18 +215,18 @@ class Query(graphene.ObjectType):
     # resolvers
     def resolve_user(self, info, **kwargs):
         query = User.get_query(info)
-        uuid = kwargs.get("uuid")
+        uuid = kwargs.get("uuid", None)
         username = kwargs.get('username')
-        if not uuid:
+        if uuid:
             return query.filter(UserModel.uuid == uuid).first()
         else:
             return query.filter(UserModel.username == username).first()
 
     def resolve_event(self, info, **kwargs):
         query = Event.get_query(info)
-        uuid = kwargs.get("uuid")
+        uuid = kwargs.get("uuid", None)
         title = kwargs.get('title')
-        if not uuid:
+        if uuid:
             return query.filter(EventModel.uuid == uuid).first()
         else:
             return query.filter(EventModel.title == title).first()
