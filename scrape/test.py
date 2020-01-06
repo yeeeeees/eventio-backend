@@ -1,3 +1,4 @@
+
 import requests 
 from bs4 import BeautifulSoup as bs4    
 from selenium import webdriver
@@ -24,7 +25,7 @@ events_holder = soup.find_all('div',{'class':'col-md-6 col-sm-6 col-xs-12 one-ev
 
 for event in events_holder:
 
-    events.append('https://adriaticket.com' + event.a.get('href'))
+    events.append('https://www.eventim.hr/' + event.a.get('href'))
 
 for event in events:
 
@@ -37,7 +38,11 @@ for event in events:
     soup = bs4(r, 'html.parser')
     try:
         image_holder = soup.find('div', class_='col-md-8') 
-        image.append(image_holder.div.p.text)
-    except:
+        image.append(image_holder.div.text)
+    except AttributeError:
         image.append(None)
     print(image)
+
+
+
+
