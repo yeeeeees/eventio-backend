@@ -37,6 +37,7 @@ class CreateUser(graphene.Mutation):
 
     user = graphene.Field(lambda: User)
     message = graphene.String()
+    success = graphene.Boolean()
 
     def mutate(self, info, username, fname, surname, email, password):
         user_with_same_username = UserModel.query.filter_by(username=username).first()
@@ -68,6 +69,7 @@ class EditUser(graphene.Mutation):
 
     user = graphene.Field(lambda: User)
     message = graphene.String()
+    success = graphene.Boolean()
 
     def mutate(self, info, uuid, username=None, fname=None, surname=None, email=None, password=None):
         user = UserModel.query.filter_by(uuid=uuid).first()
