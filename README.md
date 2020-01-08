@@ -4,8 +4,8 @@ Calendar on steroids.
 
 
 ## Prerequisites
-The only thing to run and develop this app is [Docker](https://docker.com) and docker-compose.
-This is the version of docker which this app was build with.
+The only thing needed to run and develop this app is [Docker](https://docker.com) and docker-compose.
+This is the version of docker which this app was built with.
 ```
 $ docker version
 
@@ -38,38 +38,45 @@ docker-compose up
 ```
 This will build up all the services that are listed in docker-compose.yml file.
 
-If you are running this project for the first time, tables in the database are not defined. To fix this, open new terminal and type the following:
+If you are running this project for the first time, tables in the database are not defined. To solve this, open new terminal window and type the following:
 
 ```bash
 docker exec -it eventio_graphql python create_db.py
 ```
-This will define all the tables and relationships. 
-Also use this command if you make changes to database schema or if you just want to wipe all data out of database.
+This will define all the tables and relationships and grant the user needed permissions. 
+Also use this command if you make changes to database schema in `app/models.py` or if you just want to flush all the data out of database.
 
-To shut down previously built containers and networks, type this:
+To shut down previously built containers and networks,press `Ctrl+C` or type this:
 ```bash
 docker-compose down
 ```
-This runs the container which listens on host's port 5000.
-If we want to test this:
+This app listens on host's port 5000 and all network interfaces.
+If we want to test graphql api:
 ```bash
-$ http localhost:5000 
+$ http POST localhost:5000/graphql query=="query{ allUsers{ edges{ node{ username } } } }"
+
 
 HTTP/1.0 200 OK
-Content-Length: 21
+Content-Length: 34
 Content-Type: application/json
-Date: Mon, 09 Dec 2019 20:31:33 GMT
+Date: Wed, 08 Jan 2020 20:51:16 GMT
 Server: Werkzeug/0.16.0 Python/3.6.9
 
 {
-    "home": "page"
+    "data": {
+        "allUsers": {
+            "edges": []
+        }
+    }
 }
-```
 
+```
+*Since this app listens or all network interfaces, adrresses localhost, 0.0.0.0 and 127.0.0.1 are all accepted*
+*This paste was made with [httpie](https://github.com/jakubroztocil/httpie).*
 
 ## Made with
-- [Docker](https://docker.com/) - containerzation
+- [Docker](https://docker.com/) - containerzation and virtualization
 - [Flask](https://www.palletsprojects.com/p/flask/) - micro web framework 
 - [pytest](https://docs.pytest.org/en/latest/) - python library made for testing and mocking
-- [Postgres](https://postgres.com/) - open source relational database 
-- [GraphQL](https://graphql.org/) - query language  
+- [Postgres](https://postgres.com/) - open source relational database system
+- [GraphQL](https://graphql.org/) - query language for APIs and a runtime for fulfilling queries with existing data
