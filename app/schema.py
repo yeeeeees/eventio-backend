@@ -3,6 +3,7 @@ from app import db
 from graphene import relay
 from app.models import User as UserModel, Event as EventModel
 from graphene_sqlalchemy import SQLAlchemyConnectionField, SQLAlchemyObjectType
+from flask_graphql_auth import create_access_token, mutation_header_jwt_required, query_header_jwt_required, AuthInfoField, get_jwt_identity
 
 
 class User(SQLAlchemyObjectType):
@@ -71,6 +72,7 @@ class EditUser(graphene.Mutation):
     message = graphene.String()
     success = graphene.Boolean()
 
+    # @mutation_header_jwt_required
     def mutate(self, info, uuid, username=None, fname=None, surname=None, email=None, password=None):
         user = UserModel.query.filter_by(uuid=uuid).first()
 
@@ -126,6 +128,34 @@ class DeleteUser(graphene.Mutation):
         db.session.commit()
 
         return DeleteUser(message="User deleted successfully.", success=True)
+
+
+class Login(graphene.Mutation):
+    class Arguments:
+        username = graphene.String(required=False)
+        email = graphene.String(required=False)
+        password = graphene.String(required=True)
+
+    message = graphene.String()
+    success = graphene.Boolean()
+    access_token = graphene.String()
+
+    def mutate(self, info, password, username=None, email=None):
+        # TODO: add password decryption
+        if not any([username, email]):
+            return Login(message="Please enter your email/username to login.", success=False, access_token="")
+        if username:
+            user = UserModel.query.filter_by(username=username).first()
+        if email:
+            user = UserModel.query.filter_by(email=email).first()
+
+        identity = {"uuid": user.uuid,
+                    "username": user.username}
+
+        if not user:
+            return Login(message="Invalid username/email and/or password.", success=False, access_token="")
+        else:
+            return Login(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity))
 
 
 class CreateEvent(graphene.Mutation):
@@ -240,6 +270,7 @@ class Query(graphene.ObjectType):
 
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
+    login_user = Login.Field()
     edit_user = EditUser.Field()
     delete_user = DeleteUser.Field()
 

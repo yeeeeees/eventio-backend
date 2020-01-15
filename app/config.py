@@ -10,6 +10,7 @@ class BaseConfig(object):
     SECRET_KEY = "8e9cb88bf4ffb258e0c9446abcff43fe"
     JWT_SECRET_KEY = "saki"
     JWT_ACCESS_TOKEN_EXPIRES = False
+    JWT_TOKEN_ARGUMENT_NAME = "Authorization"
 
 
 class TestingConfig(BaseConfig):
