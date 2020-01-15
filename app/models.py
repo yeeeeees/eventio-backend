@@ -2,6 +2,10 @@ from app import db
 from datetime import datetime
 
 
+def datetime_now_iso_format():
+    return datetime.now().isoformat()
+
+
 class User(db.Model):
     uuid = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(30), unique=True, nullable=False)
@@ -20,7 +24,7 @@ class User(db.Model):
 class Event(db.Model):
     uuid = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
-    date_posted = db.Column(db.String(50), nullable=False, default=datetime.now().isoformat())
+    date_posted = db.Column(db.String(50), nullable=False, default=datetime_now_iso_format)
     description = db.Column(db.Text)
     user_uuid = db.Column(db.Integer, db.ForeignKey("user.uuid"), nullable=False)
 
