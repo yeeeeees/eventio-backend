@@ -12,7 +12,7 @@ class User(SQLAlchemyObjectType):
         interfaces = (relay.Node, )
 
 
-class UserConnection(relay.Connection):
+class UserConnections(relay.Connection):
     class Meta:
         node = User
 
@@ -244,7 +244,7 @@ class Query(graphene.ObjectType):
     event = graphene.Field(lambda: Event, uuid=graphene.Int(), title=graphene.String())
 
     # queries that return all models of given type
-    all_users = SQLAlchemyConnectionField(UserConnection)
+    all_users = SQLAlchemyConnectionField(UserConnections)
 
     all_events = SQLAlchemyConnectionField(EventConnections)
 
