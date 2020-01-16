@@ -1,6 +1,7 @@
 flask
 gunicorn
+flask-graphql
 psycopg2-binary
 flask_sqlalchemy
+flask-graphql-auth
 graphene_sqlalchemy
-flask-graphql
