@@ -184,6 +184,74 @@ class CreateEvent(graphene.Mutation):
         return CreateEvent(event=event, message="Event created successfully.", success=True)
 
 
+class JoinEvent(graphene.Mutation):
+    class Arguments():
+        user_uuid = graphene.Int(required=True)
+        event_uuid = graphene.Int(required=True)
+
+    event = graphene.Field(lambda: Event)
+    user = graphene.Field(lambda: User)
+    message = graphene.String()
+    success = graphene.Boolean()
+
+    def mutate(self, info, user_uuid, event_uuid):
+        user = UserModel.query.filter_by(uuid=user_uuid).first()
+        event = EventModel.query.filter_by(uuid=event_uuid).first()
+
+        if not event:
+            return JoinEvent(event=None, user=None, message="Event unavailable.", success=False)
+
+        if not user:
+            return JoinEvent(event=None, user=None, message="User not found.", success=False)
+
+        if user is event.organizer:
+            return JoinEvent(event=None, user=None, message="You can't join your own events.", success=False)
+
+        if event in user.joined_events:
+            return JoinEvent(event=None, user=None, message="User already joined.", success=False)
+
+        if event not in user.joined_events:
+            user.joined_events.append(event)
+
+        db.session.commit()
+
+        return JoinEvent(event=event, user=user, message="User joined successfully.", success=True)
+
+
+class LeaveEvent(graphene.Mutation):
+    class Arguments():
+        user_uuid = graphene.Int(required=True)
+        event_uuid = graphene.Int(required=True)
+
+    event = graphene.Field(lambda: Event)
+    user = graphene.Field(lambda: User)
+    message = graphene.String()
+    success = graphene.Boolean()
+
+    def mutate(self, info, user_uuid, event_uuid):
+        user = UserModel.query.filter_by(uuid=user_uuid).first()
+        event = EventModel.query.filter_by(uuid=event_uuid).first()
+
+        if not event:
+            return LeaveEvent(event=None, user=None, message="Event unavailable.", success=False)
+
+        if not user:
+            return LeaveEvent(event=None, user=None, message="User not found.", success=False)
+
+        if user is event.organizer:
+            return LeaveEvent(event=None, user=None, message="You can't leave your own events.", success=False)
+
+        if event not in user.joined_events:
+            return LeaveEvent(event=None, user=None, message="Can't find an event to leave. Please try again.", success=False)
+
+        if event in user.joined_events:
+            user.joined_events.remove(event)
+
+        db.session.commit()
+
+        return LeaveEvent(event=event, user=user, message="Left event successfully.", success=True)
+
+
 class EditEvent(graphene.Mutation):
     class Arguments:
         uuid = graphene.Int(required=True)
@@ -276,6 +344,8 @@ class Mutation(graphene.ObjectType):
 
     create_event = CreateEvent.Field()
     edit_event = EditEvent.Field()
+    join_event = JoinEvent.Field()
+    leave_event = LeaveEvent.Field()
     delete_event = DeleteEvent.Field()
 
 
