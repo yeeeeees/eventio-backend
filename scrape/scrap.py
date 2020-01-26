@@ -1,5 +1,6 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs4
+import os
 
 pages = {
 
@@ -155,7 +156,7 @@ def open_page(URL):
 
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
-    location = 'C:/Users/PC/Downloads/chromedriver_win32/chromedriver.exe'
+    location = os.environ.get('WEB_CHROME')
 
     driver = webdriver.Chrome(location, chrome_options=options)
     driver.get(URL)
@@ -177,7 +178,7 @@ def main():
                            (pages[page]['img']['link'], pages[page]['img']['type'], pages[page]['img']['class']),
                            (pages[page]['text']['link'], pages[page]['text']['type'], pages[page]['text']['class']))
 
-        print(page_event.get_text())
+        print(page_event.get_img())
 
 
 if __name__ == "__main__":

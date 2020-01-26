@@ -14,7 +14,7 @@ URL = "https://adriaticket.com/"
 
 driver = webdriver.Chrome('C:/Users/PC/Downloads/chromedriver_win32/chromedriver.exe')
 driver.get(URL)
-
+print(driver)
 # r = requests.get(URL) 
 r = driver.execute_script("return document.documentElement.outerHTML")
 driver.quit()
