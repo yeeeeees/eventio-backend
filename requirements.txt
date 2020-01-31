@@ -3,5 +3,5 @@ gunicorn
 flask-graphql
 psycopg2-binary
 flask_sqlalchemy
-flask-graphql-auth
+flask-jwt-extended
 graphene_sqlalchemy

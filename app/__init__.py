@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_graphql_auth import GraphQLAuth
+from flask_jwt_extended import JWTManager
 from app.config import TestingConfig, DevelopmentConfig, ProductionConfig
 
 
@@ -10,7 +10,7 @@ app.config.from_object(DevelopmentConfig)
 
 db = SQLAlchemy(app)
 
-auth = GraphQLAuth(app)
+jwt = JWTManager(app)
 
 from app.graphql.routes import api
 from app.errors.handlers import errors
@@ -27,7 +27,7 @@ def create_app():
 
     db.init_app(app)
 
-    auth.init_app(app)
+    jwt.init_app(app)
 
     from app.graphql.routes import api
     from app.errors.handlers import errors
