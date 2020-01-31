@@ -15,7 +15,8 @@ api.add_url_rule(
     view_func=GraphQLView.as_view(
         'graphql',
         schema=schema,
-        graphiql=True
+        graphiql=True,
+        context={'session': db.session}
     )
 )
 
@@ -26,6 +27,7 @@ api.add_url_rule(
     view_func=GraphQLView.as_view(
         'graphql',
         schema=schema,
-        batch=True
+        batch=True,
+        context={'session': db.session}
     )
 )

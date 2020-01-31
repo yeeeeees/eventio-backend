@@ -36,11 +36,11 @@ class CreateUser(graphene.Mutation):
         email = graphene.String(required=True)
         password = graphene.String(required=True)
 
-    user = graphene.Field(lambda: User)
+    user = graphene.Field(User)
     message = graphene.String()
     success = graphene.Boolean()
 
-    def mutate(self, info, username, fname, surname, email, password):
+    def mutate(cls, root, info, username, fname, surname, email, password):
         user_with_same_username = UserModel.query.filter_by(username=username).first()
         user_with_same_email = UserModel.query.filter_by(email=email).first()
 
@@ -68,12 +68,12 @@ class EditUser(graphene.Mutation):
         email = graphene.String(required=False)
         password = graphene.String(required=False)
 
-    user = graphene.Field(lambda: User)
+    user = graphene.Field(User)
     message = graphene.String()
     success = graphene.Boolean()
 
-    # @mutation_header_jwt_required
-    def mutate(self, info, uuid, username=None, fname=None, surname=None, email=None, password=None):
+    @classmethod
+    def mutate(cls, root, info, uuid, username=None, fname=None, surname=None, email=None, password=None):
         user = UserModel.query.filter_by(uuid=uuid).first()
 
         user_with_same_username = UserModel.query.filter_by(username=username).first()
@@ -87,16 +87,16 @@ class EditUser(graphene.Mutation):
                 }
 
         if user_with_same_username:
-            return EditUser(user=None, message="That username is already taken. Please try again with different username.", success=False)
+            return cls(user=None, message="That username is already taken. Please try again with different username.", success=False)
 
         if user_with_same_email:
-            return EditUser(user=None, message="That email is already in use. Please try again with different email.", success=False)
+            return cls(user=None, message="That email is already in use. Please try again with different email.", success=False)
 
         if not user:
-            return EditUser(user=None, message="No user found with id. Please try again.", success=False)
+            return cls(user=None, message="No user found with id. Please try again.", success=False)
 
         if not any(args.values()):
-            return EditUser(user=None, message="Please supply some data to edit user with.", success=False)
+            return cls(user=None, message="Please supply some data to edit user with.", success=False)
 
         for key, value in args.items():
             if value is not None:
@@ -104,7 +104,7 @@ class EditUser(graphene.Mutation):
 
         db.session.commit()
 
-        return EditUser(user=user, message="User edited successfully.", success=True)
+        return cls(user=user, message="User edited successfully.", success=True)
 
 
 class DeleteUser(graphene.Mutation):
@@ -114,11 +114,11 @@ class DeleteUser(graphene.Mutation):
     message = graphene.String()
     success = graphene.Boolean()
 
-    def mutate(self, info, uuid):
+    def mutate(cls, root, info, uuid):
         user = UserModel.query.filter_by(uuid=uuid).first()
 
         if not user:
-            return DeleteUser(message="No user found with that uuid. Please try again.", success=False)
+            return cls(message="No user found with that uuid. Please try again.", success=False)
 
         if len(user.events) > 0:
             for event in user.events:
@@ -127,7 +127,7 @@ class DeleteUser(graphene.Mutation):
         db.session.delete(user)
         db.session.commit()
 
-        return DeleteUser(message="User deleted successfully.", success=True)
+        return cls(message="User deleted successfully.", success=True)
 
 
 class Login(graphene.Mutation):
@@ -140,10 +140,10 @@ class Login(graphene.Mutation):
     success = graphene.Boolean()
     access_token = graphene.String()
 
-    def mutate(self, info, password, username=None, email=None):
+    def mutate(cls, root, info, password, username=None, email=None):
         # TODO: add password decryption
         if not any([username, email]):
-            return Login(message="Please enter your email/username to login.", success=False, access_token="")
+            return cls(message="Please enter your email/username to login.", success=False, access_token=None)
         if username:
             user = UserModel.query.filter_by(username=username).first()
         if email:
@@ -153,9 +153,9 @@ class Login(graphene.Mutation):
                     "username": user.username}
 
         if not user:
-            return Login(message="Invalid username/email and/or password.", success=False, access_token="")
+            return cls(message="Invalid username/email and/or password.", success=False, access_token=None)
         else:
-            return Login(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity))
+            return cls(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity))
 
 
 class CreateEvent(graphene.Mutation):
@@ -164,11 +164,11 @@ class CreateEvent(graphene.Mutation):
         description = graphene.String(required=True)
         organizer_uuid = graphene.Int(required=True)
 
-    event = graphene.Field(lambda: Event)
+    event = graphene.Field(Event)
     message = graphene.String()
     success = graphene.Boolean()
 
-    def mutate(self, info, title, description, organizer_uuid):
+    def mutate(cls, root, info, title, description, organizer_uuid):
         event = EventModel(title=title, description=description)
         organizer = UserModel.query.filter_by(uuid=organizer_uuid).first()
 
@@ -176,12 +176,12 @@ class CreateEvent(graphene.Mutation):
             event.organizer = organizer
 
         else:
-            return CreateEvent(event=None, message="Organizer not found. Please try again.", success=False)
+            return cls(event=None, message="Organizer not found. Please try again.", success=False)
 
         db.session.add(event)
         db.session.commit()
 
-        return CreateEvent(event=event, message="Event created successfully.", success=True)
+        return cls(event=event, message="Event created successfully.", success=True)
 
 
 class JoinEvent(graphene.Mutation):
@@ -189,33 +189,33 @@ class JoinEvent(graphene.Mutation):
         user_uuid = graphene.Int(required=True)
         event_uuid = graphene.Int(required=True)
 
-    event = graphene.Field(lambda: Event)
-    user = graphene.Field(lambda: User)
+    event = graphene.Field(Event)
+    user = graphene.Field(User)
     message = graphene.String()
     success = graphene.Boolean()
 
-    def mutate(self, info, user_uuid, event_uuid):
+    def mutate(cls, root, info, user_uuid, event_uuid):
         user = UserModel.query.filter_by(uuid=user_uuid).first()
         event = EventModel.query.filter_by(uuid=event_uuid).first()
 
         if not event:
-            return JoinEvent(event=None, user=None, message="Event unavailable.", success=False)
+            return cls(event=None, user=None, message="Event unavailable.", success=False)
 
         if not user:
-            return JoinEvent(event=None, user=None, message="User not found.", success=False)
+            return cls(event=None, user=None, message="User not found.", success=False)
 
         if user is event.organizer:
-            return JoinEvent(event=None, user=None, message="You can't join your own events.", success=False)
+            return cls(event=None, user=None, message="You can't join your own events.", success=False)
 
         if event in user.joined_events:
-            return JoinEvent(event=None, user=None, message="User already joined.", success=False)
+            return cls(event=None, user=None, message="User already joined.", success=False)
 
         if event not in user.joined_events:
             user.joined_events.append(event)
 
         db.session.commit()
 
-        return JoinEvent(event=event, user=user, message="User joined successfully.", success=True)
+        return cls(event=event, user=user, message="User joined successfully.", success=True)
 
 
 class LeaveEvent(graphene.Mutation):
@@ -223,33 +223,33 @@ class LeaveEvent(graphene.Mutation):
         user_uuid = graphene.Int(required=True)
         event_uuid = graphene.Int(required=True)
 
-    event = graphene.Field(lambda: Event)
-    user = graphene.Field(lambda: User)
+    event = graphene.Field(Event)
+    user = graphene.Field(User)
     message = graphene.String()
     success = graphene.Boolean()
 
-    def mutate(self, info, user_uuid, event_uuid):
+    def mutate(cls, root, info, user_uuid, event_uuid):
         user = UserModel.query.filter_by(uuid=user_uuid).first()
         event = EventModel.query.filter_by(uuid=event_uuid).first()
 
         if not event:
-            return LeaveEvent(event=None, user=None, message="Event unavailable.", success=False)
+            return cls(event=None, user=None, message="Event unavailable.", success=False)
 
         if not user:
-            return LeaveEvent(event=None, user=None, message="User not found.", success=False)
+            return cls(event=None, user=None, message="User not found.", success=False)
 
         if user is event.organizer:
-            return LeaveEvent(event=None, user=None, message="You can't leave your own events.", success=False)
+            return cls(event=None, user=None, message="You can't leave your own events.", success=False)
 
         if event not in user.joined_events:
-            return LeaveEvent(event=None, user=None, message="Can't find an event to leave. Please try again.", success=False)
+            return cls(event=None, user=None, message="Can't find an event to leave. Please try again.", success=False)
 
         if event in user.joined_events:
             user.joined_events.remove(event)
 
         db.session.commit()
 
-        return LeaveEvent(event=event, user=user, message="Left event successfully.", success=True)
+        return cls(event=event, user=user, message="Left event successfully.", success=True)
 
 
 class EditEvent(graphene.Mutation):
@@ -258,11 +258,11 @@ class EditEvent(graphene.Mutation):
         title = graphene.String(required=False)
         description = graphene.String(required=False)
 
-    event = graphene.Field(lambda: Event)
+    event = graphene.Field(Event)
     message = graphene.String()
     success = graphene.Boolean()
 
-    def mutate(self, info, uuid, title=None, description=None):
+    def mutate(cls, root, info, uuid, title=None, description=None):
         event = EventModel.query.filter_by(uuid=uuid).first()
 
         args = {"title": title,
@@ -270,10 +270,10 @@ class EditEvent(graphene.Mutation):
                 }
 
         if not event:
-            return EditEvent(event=None, message="No event found with that uuid. Please try again.", success=False)
+            return cls(event=None, message="No event found with that uuid. Please try again.", success=False)
 
         if not any(args.values()):
-            return EditEvent(event=None, message="Please supply some data to edit event with.", success=False)
+            return cls(event=None, message="Please supply some data to edit event with.", success=False)
 
         for key, value in args.items():
             if value is not None:
@@ -281,7 +281,7 @@ class EditEvent(graphene.Mutation):
 
         db.session.commit()
 
-        return EditEvent(event=event, message="Event edited sucessfully.", success=True)
+        return cls(event=event, message="Event edited sucessfully.", success=True)
 
 
 class DeleteEvent(graphene.Mutation):
@@ -291,25 +291,25 @@ class DeleteEvent(graphene.Mutation):
     message = graphene.String()
     success = graphene.Boolean()
 
-    def mutate(self, info, uuid):
+    def mutate(cls, root, info, uuid):
         event = EventModel.query.filter_by(uuid=uuid).first()
 
         if not event:
-            return DeleteEvent(message="No event found with that uuid. Please try again.", success=False)
+            return cls(message="No event found with that uuid. Please try again.", success=False)
 
         db.session.delete(event)
         db.session.commit()
 
-        return DeleteEvent(message="The event was deleted successfully", success=True)
+        return cls(message="The event was deleted successfully", success=True)
 
 
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
     # queries that return individual models
-    user = graphene.Field(lambda: User, uuid=graphene.Int(), username=graphene.String())
+    user = graphene.Field(User, uuid=graphene.Int(), username=graphene.String())
 
-    event = graphene.Field(lambda: Event, uuid=graphene.Int(), title=graphene.String())
+    event = graphene.Field(Event, uuid=graphene.Int(), title=graphene.String())
 
     # queries that return all models of given type
     all_users = SQLAlchemyConnectionField(UserConnections)
