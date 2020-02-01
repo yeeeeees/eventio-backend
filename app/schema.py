@@ -141,12 +141,13 @@ class Login(graphene.Mutation):
     message = graphene.String()
     success = graphene.Boolean()
     access_token = graphene.String()
+    user = graphene.Field(User)
 
     @classmethod
     def mutate(cls, root, info, password, username=None, email=None):
         # TODO: add password decryption
         if not any([username, email]):
-            return cls(message="Please enter your email/username to login.", success=False, access_token=None)
+            return cls(message="Please enter your email/username to login.", success=False, access_token=None, user=None)
         if username:
             user = UserModel.query.filter_by(username=username).first()
         if email:
@@ -156,9 +157,9 @@ class Login(graphene.Mutation):
                     "username": user.username}
 
         if not user:
-            return cls(message="Invalid username/email and/or password.", success=False, access_token=None)
+            return cls(message="Invalid username/email and/or password.", success=False, access_token=None, user=None)
         else:
-            return cls(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity))
+            return cls(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity), user=user)
 
 
 class CreateEvent(graphene.Mutation):
