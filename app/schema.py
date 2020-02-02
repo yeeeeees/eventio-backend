@@ -3,7 +3,7 @@ from app import db
 from graphene import relay
 from app.models import User as UserModel, Event as EventModel
 from graphene_sqlalchemy import SQLAlchemyConnectionField, SQLAlchemyObjectType
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity
 
 
 class User(SQLAlchemyObjectType):
@@ -74,6 +74,7 @@ class EditUser(graphene.Mutation):
     success = graphene.Boolean()
 
     @classmethod
+    @jwt_required
     def mutate(cls, root, info, uuid, username=None, fname=None, surname=None, email=None, password=None):
         user = UserModel.query.filter_by(uuid=uuid).first()
 
@@ -116,6 +117,7 @@ class DeleteUser(graphene.Mutation):
     success = graphene.Boolean()
 
     @classmethod
+    @jwt_required
     def mutate(cls, root, info, uuid):
         user = UserModel.query.filter_by(uuid=uuid).first()
 
@@ -132,7 +134,7 @@ class DeleteUser(graphene.Mutation):
         return cls(message="User deleted successfully.", success=True)
 
 
-class Login(graphene.Mutation):
+class LoginUser(graphene.Mutation):
     class Arguments:
         username = graphene.String(required=False)
         email = graphene.String(required=False)
@@ -141,25 +143,46 @@ class Login(graphene.Mutation):
     message = graphene.String()
     success = graphene.Boolean()
     access_token = graphene.String()
+    refresh_token = graphene.String()
     user = graphene.Field(User)
 
     @classmethod
     def mutate(cls, root, info, password, username=None, email=None):
         # TODO: add password decryption
         if not any([username, email]):
-            return cls(message="Please enter your email/username to login.", success=False, access_token=None, user=None)
+            return cls(message="Please enter your email/username to login.", success=False, access_token=None, refresh_token=None, user=None)
         if username:
             user = UserModel.query.filter_by(username=username).first()
         if email:
             user = UserModel.query.filter_by(email=email).first()
 
-        identity = {"uuid": user.uuid,
-                    "username": user.username}
+        if not user:
+            return cls(message="Invalid username/email or password.", success=False, access_token=None, refresh_token=None, user=None)
+        else:
+            identity = {"uuid": user.uuid,
+                        "username": user.username}
+            return cls(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity), refresh_token=create_refresh_token(identity=identity), user=user)
+
+
+class CreateAccessToken(graphene.Mutation):
+
+    access_token = graphene.String()
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    @classmethod
+    @jwt_refresh_token_required
+    def mutate(cls, root, info):
+        identity = get_jwt_identity()
+        user = UserModel.query.filter_by(uuid=identity.get("uuid")).first()
 
         if not user:
-            return cls(message="Invalid username/email and/or password.", success=False, access_token=None, user=None)
+            return cls(message="Invalid JWT token submitted.", success=True, access_token=None)
+
+        if not(user and user.username == identity.get("username")):
+            return cls(message="Invalid JWT token submitted.", success=True, access_token=None)
         else:
-            return cls(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity), user=user)
+            return cls(message="Access token created successfully.", success=True, access_token=create_access_token(identity=identity))
 
 
 class CreateEvent(graphene.Mutation):
@@ -173,6 +196,7 @@ class CreateEvent(graphene.Mutation):
     success = graphene.Boolean()
 
     @classmethod
+    @jwt_required
     def mutate(cls, root, info, title, description, organizer_uuid):
         event = EventModel(title=title, description=description)
         organizer = UserModel.query.filter_by(uuid=organizer_uuid).first()
@@ -200,6 +224,7 @@ class JoinEvent(graphene.Mutation):
     success = graphene.Boolean()
 
     @classmethod
+    @jwt_required
     def mutate(cls, root, info, user_uuid, event_uuid):
         user = UserModel.query.filter_by(uuid=user_uuid).first()
         event = EventModel.query.filter_by(uuid=event_uuid).first()
@@ -235,6 +260,7 @@ class LeaveEvent(graphene.Mutation):
     success = graphene.Boolean()
 
     @classmethod
+    @jwt_required
     def mutate(cls, root, info, user_uuid, event_uuid):
         user = UserModel.query.filter_by(uuid=user_uuid).first()
         event = EventModel.query.filter_by(uuid=event_uuid).first()
@@ -270,6 +296,7 @@ class EditEvent(graphene.Mutation):
     success = graphene.Boolean()
 
     @classmethod
+    @jwt_required
     def mutate(cls, root, info, uuid, title=None, description=None):
         event = EventModel.query.filter_by(uuid=uuid).first()
 
@@ -300,6 +327,7 @@ class DeleteEvent(graphene.Mutation):
     success = graphene.Boolean()
 
     @classmethod
+    @jwt_required
     def mutate(cls, root, info, uuid):
         event = EventModel.query.filter_by(uuid=uuid).first()
 
@@ -347,9 +375,11 @@ class Query(graphene.ObjectType):
 
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
-    login_user = Login.Field()
+    login_user = LoginUser.Field()
     edit_user = EditUser.Field()
     delete_user = DeleteUser.Field()
+
+    get_access_token = CreateAccessToken.Field()
 
     create_event = CreateEvent.Field()
     edit_event = EditEvent.Field()
