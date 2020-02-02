@@ -46,10 +46,10 @@ class CreateUser(graphene.Mutation):
         user_with_same_email = UserModel.query.filter_by(email=email).first()
 
         if user_with_same_username:
-            return CreateUser(user=None, message="That username is already taken. Plesae try again with different username.", success=False)
+            return cls(user=None, message="That username is already taken. Plesae try again with different username.", success=False)
 
         if user_with_same_email:
-            return CreateUser(user=None, message="That email is already in use. Plesae try again with different email.", success=False)
+            return cls(user=None, message="That email is already in use. Plesae try again with different email.", success=False)
 
         if not user_with_same_email and not user_with_same_username:
             user = UserModel(username=username, fname=fname, surname=surname, email=email, password=password)
@@ -57,7 +57,7 @@ class CreateUser(graphene.Mutation):
         db.session.add(user)
         db.session.commit()
 
-        return CreateUser(user=user, message="User created successfully.", success=True)
+        return cls(user=user, message="User created successfully.", success=True)
 
 
 class EditUser(graphene.Mutation):
