@@ -11,10 +11,10 @@ class User(db.Model):
     username = db.Column(db.String(30), unique=True, nullable=False)
     fname = db.Column(db.String(20), nullable=False)
     surname = db.Column(db.String(35), nullable=False)
-    is_verified = db.Column(db.Boolean(), default=False)
-    profile_pic = db.Column(db.Text(), default="default.jpg")
+    is_verified = db.Column(db.Boolean, default=False)
+    profile_pic = db.Column(db.Text, default="default.jpg")
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(60), nullable=False)
     created_events = db.relationship("Event", backref="organizer", lazy=True)
     joined_events = db.relationship("Event", secondary="joins", backref="joined_users")
 
