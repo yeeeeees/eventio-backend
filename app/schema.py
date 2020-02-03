@@ -124,7 +124,7 @@ class DeleteUser(graphene.Mutation):
         if not user:
             return cls(message="No user found with that uuid. Please try again.", success=False)
 
-        if len(user.events) > 0:
+        if len(user.created_events) > 0:
             for event in user.created_events:
                 db.session.delete(event)
 
