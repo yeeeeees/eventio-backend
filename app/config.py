@@ -8,8 +8,8 @@ class BaseConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DB_URI', 'postgres://root:eventio@postgres/eventio')
     SECRET_KEY = "8e9cb88bf4ffb258e0c9446abcff43fe"
-    JWT_SECRET_KEY = "eventio"
-    JWT_TOKEN_LOCATION = "headers"
+    JWT_SECRET_KEY = "saki"
+    JWT_ACCESS_TOKEN_EXPIRES = False
 
 
 class TestingConfig(BaseConfig):
