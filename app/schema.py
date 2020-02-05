@@ -1,9 +1,14 @@
 import graphene
 from app import db
 from graphene import relay
+from flask import request, url_for
+from app.utils import save_picture
 from app.models import User as UserModel, Event as EventModel
 from graphene_sqlalchemy import SQLAlchemyConnectionField, SQLAlchemyObjectType
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity
+
+
+EXT_IP = "http://34.89.206.63"
 
 
 class User(SQLAlchemyObjectType):
@@ -44,6 +49,18 @@ class CreateUser(graphene.Mutation):
     def mutate(cls, root, info, username, fname, surname, email, password):
         user_with_same_username = UserModel.query.filter_by(username=username).first()
         user_with_same_email = UserModel.query.filter_by(email=email).first()
+        image = request.files.get('profile_pic')
+
+        args = {"username": username,
+                "fname": fname,
+                "surname": surname,
+                "email": email,
+                "password": password
+                }
+
+        if image:
+            profile_picture = save_picture(image, "profile")
+            args.update({"profile_pic": profile_picture})
 
         if user_with_same_username:
             return cls(user=None, message="That username is already taken. Plesae try again with different username.", success=False)
@@ -52,7 +69,7 @@ class CreateUser(graphene.Mutation):
             return cls(user=None, message="That email is already in use. Plesae try again with different email.", success=False)
 
         if not user_with_same_email and not user_with_same_username:
-            user = UserModel(username=username, fname=fname, surname=surname, email=email, password=password)
+            user = UserModel(**args)
 
         db.session.add(user)
         db.session.commit()
@@ -80,6 +97,7 @@ class EditUser(graphene.Mutation):
 
         user_with_same_username = UserModel.query.filter_by(username=username).first()
         user_with_same_email = UserModel.query.filter_by(email=email).first()
+        image = request.files.get('profile_pic')
 
         args = {"username": username,
                 "fname": fname,
@@ -87,6 +105,10 @@ class EditUser(graphene.Mutation):
                 "email": email,
                 "password": password
                 }
+
+        if image:
+            profile_picture = save_picture(image)
+            args.update({"profile_pic": profile_picture})
 
         if user_with_same_username:
             return cls(user=None, message="That username is already taken. Please try again with different username.", success=False)
@@ -161,6 +183,7 @@ class LoginUser(graphene.Mutation):
         else:
             identity = {"uuid": user.uuid,
                         "username": user.username}
+
             return cls(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity), refresh_token=create_refresh_token(identity=identity), user=user)
 
 
@@ -181,6 +204,7 @@ class CreateAccessToken(graphene.Mutation):
 
         if not(user and user.username == identity.get("username")):
             return cls(message="Invalid JWT token submitted.", success=True, access_token=None)
+
         else:
             return cls(message="Access token created successfully.", success=True, access_token=create_access_token(identity=identity))
 
@@ -200,6 +224,11 @@ class CreateEvent(graphene.Mutation):
     def mutate(cls, root, info, title, description, organizer_uuid):
         event = EventModel(title=title, description=description)
         organizer = UserModel.query.filter_by(uuid=organizer_uuid).first()
+        image = request.files.get('event_thumbnail')
+
+        if image:
+            event_thumbnail = save_picture(image, "event")
+            event.event_thumbnail = event_thumbnail
 
         if organizer:
             event.organizer = organizer
@@ -249,6 +278,48 @@ class JoinEvent(graphene.Mutation):
         return cls(event=event, user=user, message="User joined successfully.", success=True)
 
 
+class EditEvent(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.Int(required=True)
+        title = graphene.String(required=False)
+        description = graphene.String(required=False)
+
+    event = graphene.Field(Event)
+    message = graphene.String()
+    success = graphene.Boolean()
+
+    @classmethod
+    @jwt_required
+    def mutate(cls, root, info, uuid, title=None, description=None):
+        event = EventModel.query.filter_by(uuid=uuid).first()
+        image = request.files.get('event_thumbnail')
+
+        args = {"title": title,
+                "description": description
+                }
+
+        if image:
+            event_thumbnail = save_picture(image, "event")
+            args.update({"eventio_thumbnail": event_thumbnail})
+
+        else:
+            return cls(event=None, message="Please supply an event thumbnail picture.", success=False)
+
+        if not event:
+            return cls(event=None, message="No event found with that uuid. Please try again.", success=False)
+
+        if not any(args.values()):
+            return cls(event=None, message="Please supply some data to edit event with.", success=False)
+
+        for key, value in args.items():
+            if value is not None:
+                setattr(event, key, value)
+
+        db.session.commit()
+
+        return cls(event=event, message="Event edited sucessfully.", success=True)
+
+
 class LeaveEvent(graphene.Mutation):
     class Arguments():
         user_uuid = graphene.Int(required=True)
@@ -283,40 +354,6 @@ class LeaveEvent(graphene.Mutation):
         db.session.commit()
 
         return cls(event=event, user=user, message="Left event successfully.", success=True)
-
-
-class EditEvent(graphene.Mutation):
-    class Arguments:
-        uuid = graphene.Int(required=True)
-        title = graphene.String(required=False)
-        description = graphene.String(required=False)
-
-    event = graphene.Field(Event)
-    message = graphene.String()
-    success = graphene.Boolean()
-
-    @classmethod
-    @jwt_required
-    def mutate(cls, root, info, uuid, title=None, description=None):
-        event = EventModel.query.filter_by(uuid=uuid).first()
-
-        args = {"title": title,
-                "description": description
-                }
-
-        if not event:
-            return cls(event=None, message="No event found with that uuid. Please try again.", success=False)
-
-        if not any(args.values()):
-            return cls(event=None, message="Please supply some data to edit event with.", success=False)
-
-        for key, value in args.items():
-            if value is not None:
-                setattr(event, key, value)
-
-        db.session.commit()
-
-        return cls(event=event, message="Event edited sucessfully.", success=True)
 
 
 class DeleteEvent(graphene.Mutation):

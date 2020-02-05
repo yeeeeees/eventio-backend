@@ -1,7 +1,9 @@
 flask
+pillow
 gunicorn
 flask-graphql
 psycopg2-binary
 flask_sqlalchemy
 flask-jwt-extended
 graphene_sqlalchemy
+graphene-file-upload

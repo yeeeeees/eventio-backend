@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify
 from app import db
 from app.models import *
-from flask_graphql import GraphQLView
+# from flask_graphql import GraphQLView
+from graphene_file_upload.flask import FileUploadGraphQLView
 from app.schema import schema
 
 
@@ -12,7 +13,7 @@ api = Blueprint('api', __name__)
 api.add_url_rule(
     "/graphiql",
     "graphiql",
-    view_func=GraphQLView.as_view(
+    view_func=FileUploadGraphQLView.as_view(
         'graphql',
         schema=schema,
         graphiql=True,
@@ -24,7 +25,7 @@ api.add_url_rule(
 api.add_url_rule(
     "/graphql",
     "graphql",
-    view_func=GraphQLView.as_view(
+    view_func=FileUploadGraphQLView.as_view(
         'graphql',
         schema=schema,
         batch=True,
