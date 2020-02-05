@@ -1,6 +1,12 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs4
 import os
+import sys
+
+sys.path.insert(1, '/home/proj/eventio-backend/app/')
+from app import db
+from app.models import User, Event
+
 
 pages = {
 
@@ -179,7 +185,15 @@ def main():
                            (pages[page]['text']['link'], pages[page]['text']['type'], pages[page]['text']['class']))
 
         print(page_event.get_img())
+        
+        for name, time, loc, text in zip(page_event.name, page_event.time, page_event.loc, page_event.get_text()):
+            user = User(username=pages[page]['username'], fname=pages[page]['username'], surname=pages[page]['username'], email='{}@gmail.com'.format(surname=pages[page]['username']), password=pages[page]['username'],                             created_events=[], joined_events=[])
+            db.session.add(user)
+            db.session.commit()
 
+            event = Event(title=name, date_posted=time, location=loc, description=text, organizer_uuid=user.uuid)
+            db.session.add(event)
+            db.session.commit()
 
 if __name__ == "__main__":
     main()
