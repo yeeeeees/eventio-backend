@@ -220,7 +220,8 @@ class CreateEvent(graphene.Mutation):
     class Arguments:
         title = graphene.String(required=True)
         description = graphene.String(required=True)
-        organizer_uuid = graphene.Int(required=True)
+        # organizer_uuid = graphene.Int(required=True)
+        event_thumbnail = graphene.String()
 
     event = graphene.Field(Event)
     message = graphene.String()
@@ -228,16 +229,22 @@ class CreateEvent(graphene.Mutation):
 
     @classmethod
     @jwt_required
-    def mutate(cls, root, info, title, description):
+    def mutate(cls, root, info, title, description, event_thumbnail=None):
         organizer_uuid = get_jwt_identity().get("uuid")
 
         event = EventModel(title=title, description=description)
         organizer = UserModel.query.filter_by(uuid=organizer_uuid).first()
         image = request.files.get('event_thumbnail')
 
+        if event_thumbnail:
+            event.event_thumbnail = event_thumbnail
+
         if image:
             event_thumbnail = save_picture(image, "event")
             event.event_thumbnail = event_thumbnail
+
+        else:
+            return cls(event=None, message="Please supply a thumbnail")
 
         if organizer:
             event.organizer = organizer
@@ -314,7 +321,7 @@ class EditEvent(graphene.Mutation):
 
         if image:
             event_thumbnail = save_picture(image, "event")
-            args.update({"eventio_thumbnail": event_thumbnail})
+            args.update({"event_thumbnail": event_thumbnail})
 
         else:
             return cls(event=None, message="Please supply an event thumbnail picture.", success=False)
