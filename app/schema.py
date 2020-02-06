@@ -79,7 +79,7 @@ class CreateUser(graphene.Mutation):
 
 class EditUser(graphene.Mutation):
     class Arguments:
-        uuid = graphene.Int(required=True)
+        # uuid = graphene.Int(required=True) -> this is being queried from jwt identity
         username = graphene.String(required=False)
         fname = graphene.String(required=False)
         surname = graphene.String(required=False)
@@ -92,7 +92,9 @@ class EditUser(graphene.Mutation):
 
     @classmethod
     @jwt_required
-    def mutate(cls, root, info, uuid, username=None, fname=None, surname=None, email=None, password=None):
+    def mutate(cls, root, info, username=None, fname=None, surname=None, email=None, password=None):
+        uuid = get_jwt_identity().get("uuid")
+
         user = UserModel.query.filter_by(uuid=uuid).first()
 
         user_with_same_username = UserModel.query.filter_by(username=username).first()
@@ -133,14 +135,17 @@ class EditUser(graphene.Mutation):
 
 class DeleteUser(graphene.Mutation):
     class Arguments:
-        uuid = graphene.Int(required=True)
+        pass
+        # uuid = graphene.Int(required=True)
 
     message = graphene.String()
     success = graphene.Boolean()
 
     @classmethod
     @jwt_required
-    def mutate(cls, root, info, uuid):
+    def mutate(cls, root, info):
+        uuid = get_jwt_identity().get("uuid")
+
         user = UserModel.query.filter_by(uuid=uuid).first()
 
         if not user:
@@ -223,7 +228,9 @@ class CreateEvent(graphene.Mutation):
 
     @classmethod
     @jwt_required
-    def mutate(cls, root, info, title, description, organizer_uuid):
+    def mutate(cls, root, info, title, description):
+        organizer_uuid = get_jwt_identity().get("uuid")
+
         event = EventModel(title=title, description=description)
         organizer = UserModel.query.filter_by(uuid=organizer_uuid).first()
         image = request.files.get('event_thumbnail')
@@ -246,7 +253,7 @@ class CreateEvent(graphene.Mutation):
 
 class JoinEvent(graphene.Mutation):
     class Arguments():
-        user_uuid = graphene.Int(required=True)
+        # user_uuid = graphene.Int(required=True)
         event_uuid = graphene.Int(required=True)
 
     event = graphene.Field(Event)
@@ -256,7 +263,9 @@ class JoinEvent(graphene.Mutation):
 
     @classmethod
     @jwt_required
-    def mutate(cls, root, info, user_uuid, event_uuid):
+    def mutate(cls, root, info, event_uuid):
+        user_uuid = get_jwt_identity().get("uuid")
+
         user = UserModel.query.filter_by(uuid=user_uuid).first()
         event = EventModel.query.filter_by(uuid=event_uuid).first()
 
@@ -293,6 +302,9 @@ class EditEvent(graphene.Mutation):
     @classmethod
     @jwt_required
     def mutate(cls, root, info, uuid, title=None, description=None):
+        organizer_uuid = get_jwt_identity().get("uuid")
+        organizer = UserModel.query.filter_by(uuid=organizer_uuid)
+
         event = EventModel.query.filter_by(uuid=uuid).first()
         image = request.files.get('event_thumbnail')
 
@@ -306,6 +318,9 @@ class EditEvent(graphene.Mutation):
 
         else:
             return cls(event=None, message="Please supply an event thumbnail picture.", success=False)
+
+        if organizer is not event.organizer:
+            return cls(event=None, message="Invalid token.", success=True)
 
         if not event:
             return cls(event=None, message="No event found with that uuid. Please try again.", success=False)
@@ -324,7 +339,7 @@ class EditEvent(graphene.Mutation):
 
 class LeaveEvent(graphene.Mutation):
     class Arguments():
-        user_uuid = graphene.Int(required=True)
+        # user_uuid = graphene.Int(required=True)
         event_uuid = graphene.Int(required=True)
 
     event = graphene.Field(Event)
@@ -334,7 +349,9 @@ class LeaveEvent(graphene.Mutation):
 
     @classmethod
     @jwt_required
-    def mutate(cls, root, info, user_uuid, event_uuid):
+    def mutate(cls, root, info, event_uuid):
+        user_uuid = get_jwt_identity().get("uuid")
+
         user = UserModel.query.filter_by(uuid=user_uuid).first()
         event = EventModel.query.filter_by(uuid=event_uuid).first()
 
@@ -368,7 +385,13 @@ class DeleteEvent(graphene.Mutation):
     @classmethod
     @jwt_required
     def mutate(cls, root, info, uuid):
+        organizer_uuid = get_jwt_identity().get("uuid")
+        organizer = UserModel.query.filter_by(uuid=organizer_uuid)
+
         event = EventModel.query.filter_by(uuid=uuid).first()
+
+        if organizer is not event.organizer:
+            return cls(event=None, message="Invalid token.", success=True)
 
         if not event:
             return cls(message="No event found with that uuid. Please try again.", success=False)
@@ -387,6 +410,8 @@ class Query(graphene.ObjectType):
 
     event = graphene.Field(Event, uuid=graphene.Int(), title=graphene.String())
 
+    search_events = graphene.Field(graphene.List(Event), title=graphene.String())
+
     # queries that return all models of given type
     all_users = SQLAlchemyConnectionField(UserConnections)
 
@@ -395,7 +420,7 @@ class Query(graphene.ObjectType):
     # resolvers
     def resolve_user(self, info, **kwargs):
         query = User.get_query(info)
-        uuid = kwargs.get("uuid", None)
+        uuid = kwargs.get("uuid")
         username = kwargs.get('username')
         if uuid:
             return query.filter(UserModel.uuid == uuid).first()
@@ -404,12 +429,17 @@ class Query(graphene.ObjectType):
 
     def resolve_event(self, info, **kwargs):
         query = Event.get_query(info)
-        uuid = kwargs.get("uuid", None)
+        uuid = kwargs.get("uuid")
         title = kwargs.get('title')
         if uuid:
             return query.filter(EventModel.uuid == uuid).first()
         else:
             return query.filter(EventModel.title == title).first()
+
+    def resolve_search_events(self, info, **kwargs):
+        query = Event.get_query(info)
+        title = kwargs.get("title")
+        return query.filter(EventModel.title.contains(title.lower())).all()
 
 
 class Mutation(graphene.ObjectType):
