@@ -94,7 +94,7 @@ pages = {
         'text': {
             'link': 'https://adriaticket.com',
             'type': 'div',
-            'class': 'col-md-8'
+            'class': 'ng-binding'
         }
     }
 }
@@ -191,7 +191,7 @@ class Event():
 
             try:
                 text_holder = soup.find(self.TEXT[1], class_=self.TEXT[2])
-                text.append(text_holder.div.text)
+                text.append(text_holder.text)
             except AttributeError:
                 text.append(None)
 
@@ -209,7 +209,7 @@ def main():
                           (pages[page]['img']['link'], pages[page]['img']['type'], pages[page]['img']['class']),
                           (pages[page]['text']['link'], pages[page]['text']['type'], pages[page]['text']['class']))
         
-        add_to_db(page, page_event.name, page_event.time, page_event.loc, page_event.get_text())
+        add_to_db(page, page_event.name, page_event.time, page_event.loc, page_event.get_text(), page_event.get_img())
 
 if __name__ == "__main__":
     main()
