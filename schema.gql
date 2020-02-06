@@ -3,6 +3,12 @@ schema {
   mutation: Mutation
 }
 
+type CreateAccessToken {
+  accessToken: String
+  success: Boolean
+  message: String
+}
+
 type CreateEvent {
   event: Event
   message: String
@@ -41,6 +47,7 @@ type Event implements Node {
   uuid: ID!
   title: String!
   datePosted: String!
+  eventThumbnail: String
   location: String
   description: String
   organizerUuid: Int!
@@ -76,6 +83,8 @@ enum EventSortEnum {
   TITLE_DESC
   DATE_POSTED_ASC
   DATE_POSTED_DESC
+  EVENT_THUMBNAIL_ASC
+  EVENT_THUMBNAIL_DESC
   LOCATION_ASC
   LOCATION_DESC
   DESCRIPTION_ASC
@@ -98,22 +107,24 @@ type LeaveEvent {
   success: Boolean
 }
 
-type Login {
+type LoginUser {
   message: String
   success: Boolean
   accessToken: String
+  refreshToken: String
   user: User
 }
 
 type Mutation {
   createUser(email: String!, fname: String!, password: String!, surname: String!, username: String!): CreateUser
-  loginUser(email: String, password: String!, username: String): Login
-  editUser(email: String, fname: String, password: String, surname: String, username: String, uuid: Int!): EditUser
-  deleteUser(uuid: Int!): DeleteUser
+  loginUser(email: String, password: String!, username: String): LoginUser
+  editUser(email: String, fname: String, password: String, surname: String, username: String): EditUser
+  deleteUser: DeleteUser
+  getAccessToken: CreateAccessToken
   createEvent(description: String!, organizerUuid: Int!, title: String!): CreateEvent
   editEvent(description: String, title: String, uuid: Int!): EditEvent
-  joinEvent(eventUuid: Int!, userUuid: Int!): JoinEvent
-  leaveEvent(eventUuid: Int!, userUuid: Int!): LeaveEvent
+  joinEvent(eventUuid: Int!): JoinEvent
+  leaveEvent(eventUuid: Int!): LeaveEvent
   deleteEvent(uuid: Int!): DeleteEvent
 }
 
@@ -132,6 +143,7 @@ type Query {
   node(id: ID!): Node
   user(uuid: Int, username: String): User
   event(uuid: Int, title: String): Event
+  searchEvents(title: String): [Event]
   allUsers(sort: [UserSortEnum] = [UUID_ASC], before: String, after: String, first: Int, last: Int): UserConnectionsConnection
   allEvents(sort: [EventSortEnum] = [UUID_ASC], before: String, after: String, first: Int, last: Int): EventConnectionsConnection
 }
@@ -141,7 +153,6 @@ type User implements Node {
   username: String!
   fname: String!
   surname: String!
-  isVerified: Boolean
   profilePic: String
   email: String!
   password: String!
@@ -179,8 +190,6 @@ enum UserSortEnum {
   FNAME_DESC
   SURNAME_ASC
   SURNAME_DESC
-  IS_VERIFIED_ASC
-  IS_VERIFIED_DESC
   PROFILE_PIC_ASC
   PROFILE_PIC_DESC
   EMAIL_ASC
@@ -188,3 +197,4 @@ enum UserSortEnum {
   PASSWORD_ASC
   PASSWORD_DESC
 }
+
