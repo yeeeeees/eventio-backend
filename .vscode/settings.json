@@ -1,6 +1,16 @@
 {
-    "python.pythonPath": "/usr/bin/python3",
+    "python.pythonPath": "/home/saki/Documents/eventio-backend/venv/bin/python3",
     "python.linting.pylintEnabled": false,
     "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true
+    "python.linting.flake8Enabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./app",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.unittestEnabled": true
 }

@@ -323,9 +323,6 @@ class EditEvent(graphene.Mutation):
             event_thumbnail = save_picture(image, "event")
             args.update({"event_thumbnail": event_thumbnail})
 
-        else:
-            return cls(event=None, message="Please supply an event thumbnail picture.", success=False)
-
         if organizer is not event.organizer:
             return cls(event=None, message="Invalid token.", success=True)
 

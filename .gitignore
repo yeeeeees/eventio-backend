@@ -114,4 +114,5 @@ venv/
 .vscode/
 
 docker/postgres/
+/app/site.db
 # End of https://www.gitignore.io/api/python

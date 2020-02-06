@@ -121,7 +121,7 @@ type Mutation {
   editUser(email: String, fname: String, password: String, surname: String, username: String): EditUser
   deleteUser: DeleteUser
   getAccessToken: CreateAccessToken
-  createEvent(description: String!, organizerUuid: Int!, title: String!): CreateEvent
+  createEvent(description: String!, eventThumbnail: String, title: String!): CreateEvent
   editEvent(description: String, title: String, uuid: Int!): EditEvent
   joinEvent(eventUuid: Int!): JoinEvent
   leaveEvent(eventUuid: Int!): LeaveEvent
