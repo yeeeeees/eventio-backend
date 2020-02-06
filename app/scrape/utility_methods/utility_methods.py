@@ -6,7 +6,7 @@ from selenium import webdriver
 from bs4 import BeautifulSoup as bs4
 import os
 
-def add_to_db(username, titles, times, locs, descs):        
+def add_to_db(username, titles, times, locs, descs, images):        
     
     duplicate_user = False
     for user in User.query.all():
@@ -19,7 +19,7 @@ def add_to_db(username, titles, times, locs, descs):
         db.session.commit()
         
     
-    for title, time, loc, desc in zip(titles, times, locs, descs):
+    for title, time, loc, desc, image in zip(titles, times, locs, descs, images):
         
         duplicate_event = False
         for event in Event.query.all():
@@ -27,7 +27,7 @@ def add_to_db(username, titles, times, locs, descs):
                 duplicate_event = True
         
         if duplicate_event == False:
-            event = Event(title=title, date_posted=time, location=loc, description=desc, organizer_uuid=extra_user.uuid)
+            event = Event(title=title, date_posted=time, event_thumbnail=image, location=loc, description=desc, organizer_uuid=extra_user.uuid)
             db.session.add(event)
             db.session.commit()
 
