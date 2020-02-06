@@ -180,11 +180,13 @@ class LoginUser(graphene.Mutation):
 
         if not user:
             return cls(message="Invalid username/email or password.", success=False, access_token=None, refresh_token=None, user=None)
-        else:
-            identity = {"uuid": user.uuid,
-                        "username": user.username}
 
+        identity = {"uuid": user.uuid,
+                    "username": user.username}
+        if user.password == password:
             return cls(message="Logged in succesfully.", success=True, access_token=create_access_token(identity=identity), refresh_token=create_refresh_token(identity=identity), user=user)
+        else:
+            return cls(message="Invalid username/email or password.", success=False, access_token=None, refresh_token=None, user=None)
 
 
 class CreateAccessToken(graphene.Mutation):
