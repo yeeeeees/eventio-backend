@@ -76,7 +76,7 @@ Server: Werkzeug/0.16.0 Python/3.6.9
 
 
 If you are using REST Clients like Postman or Insomnia, you might want to import schema for auto-completiton and introspection. Assuming you are in project root directory, type this:
-```py
+```python
 >>> from app.schema import schema
 >>> print(schema)
 schema {
@@ -272,8 +272,18 @@ enum UserSortEnum {
 ```
 You can paste output or import [schema.gql](schema.gql) to your REST Client of choice and you'll have autocompletition when writing queries.
 
+## Tests
 
+Tests are developed using unittest, standard python testing library and those tests are being run by [nose test runner](https://nose.readthedocs.io/en/latest/).
+To run tests, navigate to root project directory and type:
+```
+$ nosetests 
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.784s
 
+OK
+```
 
 ## Made with
 - [Docker](https://docker.com/) - containerzation and virtualization
